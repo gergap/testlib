@@ -42,7 +42,7 @@ char FAIL[]    = BOLDRED"FAIL!"RESET;
 char XFAIL[]   = BOLDRED"XFAIL!"RESET;
 char SKIPPED[] = BOLDYELLOW"SKIPPED"RESET;
 char RESULT[]  = BOLDBLUE"RESULT"RESET;
-static void testlib_disable_color()
+static void testlib_disable_color(void)
 {
     strncpy(PASS,    "PASS",    sizeof(PASS));
     strncpy(FAIL,    "FAIL!",   sizeof(FAIL));
@@ -202,13 +202,13 @@ static struct benchmark g_benchmark =  { 0, 0, 50000, TIMER_STATIC_INITIALIZER }
 #endif /* ENABLE_BENCHMARK */
 
 /** Increase verbosity level to get more output. */
-int testlib_verbose()
+int testlib_verbose(void)
 {
     return ++g_verbose;
 }
 
 /** Decrease verbosity level to get less output. */
-int testlib_silent()
+int testlib_silent(void)
 {
     return --g_verbose;
 }
@@ -412,7 +412,7 @@ static int testlib_find_col(const char *name)
 /** \internal Returns the name of the current data set in data-driven tests.
  * Returns an empty string if the current test is no data-driven test.
  */
-static const char *testlib_current_dataset()
+static const char *testlib_current_dataset(void)
 {
     if (g_data.num_rows == 0) return "";
     return g_data.rows[g_data.current_row].name;
@@ -476,7 +476,7 @@ double testlib_fetch_double(const char *name)
 }
 
 /** \internal Returns 1 if the current test is expected to fail, else 0 is returned. */
-static int testlib_is_expect_fail()
+static int testlib_is_expect_fail(void)
 {
     /* if g_expectfail is not set, return zero */
     if (g_expectfail == 0) return 0;
@@ -490,7 +490,7 @@ static int testlib_is_expect_fail()
 /** \internal Resets expect_fail flag gloabaly. This is called after a test has
  * completeley finished.
  */
-static void testlib_reset_expect_fail_forced()
+static void testlib_reset_expect_fail_forced(void)
 {
     g_expectfail = 0;
     g_dataIndex = 0;
@@ -503,7 +503,7 @@ static void testlib_reset_expect_fail_forced()
  * If dataIndex == "", which means we expect this to fail for all datasets
  * this function does not reset the flag, otherwise it does.
  */
-static void testlib_reset_expect_fail()
+static void testlib_reset_expect_fail(void)
 {
     if (g_dataIndex[0] == 0) return;
     g_expectfail = 0;
@@ -979,7 +979,7 @@ out:
 }
 
 /** Lists all registered test functions. */
-void testlib_list_tests()
+void testlib_list_tests(void)
 {
     struct list_element *cur = g_first_test;
 
@@ -990,19 +990,19 @@ void testlib_list_tests()
 }
 
 /** Returns the test result statistic. */
-const struct testlib_stat *testlib_result() {
+const struct testlib_stat *testlib_result(void) {
     return &g_results;
 }
 
 #ifdef ENABLE_BENCHMARK
-void test_benchmark_start()
+void test_benchmark_start(void)
 {
     g_benchmark.n = 1;
     g_benchmark.i = 1;
     timer_start(&g_benchmark.t);
 }
 
-bool test_benchmark_done()
+bool test_benchmark_done(void)
 {
     uint64_t time;
     double f, fTotal;
@@ -1028,13 +1028,13 @@ bool test_benchmark_done()
     return true;
 }
 
-void test_benchmark_next()
+void test_benchmark_next(void)
 {
     --g_benchmark.i;
 }
 #endif /* ENABLE_BENCHMARK */
 
-void register_tests();
+void register_tests(void);
 
 #ifdef HAVE_GETOPT
 /** \internal print test usage */

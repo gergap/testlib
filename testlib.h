@@ -357,9 +357,9 @@ enum testlib_fail_mode {
  * @endcode
  */
 # define UBENCHMARK for (test_benchmark_start(); test_benchmark_done(); test_benchmark_next())
-void test_benchmark_start();
-bool test_benchmark_done();
-void test_benchmark_next();
+void test_benchmark_start(void);
+bool test_benchmark_done(void);
+void test_benchmark_next(void);
 #else
 # define UBENCHMARK while (0)
 #endif
@@ -381,7 +381,7 @@ void *testlib_fetch(const char *name);
 int testlib_fetch_int(const char *name);
 double testlib_fetch_double(const char *name);
 
-typedef void (*testfunction)();
+typedef void (*testfunction)(void);
 
 void testlib_register_name(const char *name);
 void testlib_register_init(testfunction func);
@@ -389,9 +389,9 @@ void testlib_register_cleanup(testfunction func);
 void testlib_register_test(testfunction test, const char *stest, testfunction init, testfunction cleanup);
 void testlib_register_datadriven_test(testfunction test, const char *stest, testfunction testdata, const char *stestdata, testfunction init, testfunction cleanup);
 void testlib_run_tests(const char *testname, const char *testset);
-void testlib_list_tests();
-int testlib_verbose();
-int testlib_silent();
+void testlib_list_tests(void);
+int testlib_verbose(void);
+int testlib_silent(void);
 void testlib_info(const char *msg);
 
 struct testlib_stat {
@@ -401,7 +401,7 @@ struct testlib_stat {
     int num_skipped;
 };
 
-const struct testlib_stat *testlib_result();
+const struct testlib_stat *testlib_result(void);
 int testlib_main(int argc, char *argv[]);
 
 #define UINFO(msg) testlib_info(msg)
