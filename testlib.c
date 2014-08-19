@@ -1,21 +1,3 @@
-/*
- *  Copyright (C) 2014 Gerhard Gappmeier <gappy1502@gmx.net>
- *
- *  This file is part of testlib.
- *
- *  testlib is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  testlib is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with testlib. If not, see <http://www.gnu.org/licenses/>.
- */
 #include "testlib.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -34,6 +16,9 @@
 #ifdef ENABLE_BENCHMARK
 # include "timer.h"
 #endif
+#if defined (_MSC_VER) && !defined (_WIN32_WCE)
+# include <crtdbg.h>
+#endif
 
 #ifdef ENABLE_COLOR
 # include "linuxtermcolors.h"
@@ -42,7 +27,7 @@ char FAIL[]    = BOLDRED"FAIL!"RESET;
 char XFAIL[]   = BOLDRED"XFAIL!"RESET;
 char SKIPPED[] = BOLDYELLOW"SKIPPED"RESET;
 char RESULT[]  = BOLDBLUE"RESULT"RESET;
-static void testlib_disable_color(void)
+static void testlib_disable_color()
 {
     strncpy(PASS,    "PASS",    sizeof(PASS));
     strncpy(FAIL,    "FAIL!",   sizeof(FAIL));
@@ -110,6 +95,7 @@ static inline bool uFuzzyIsNullf(float f)
 /** \internal Union for storing different test data values. */
 union testdatavalue {
     int i;
+    unsigned int u;
     double f;
     void *ptr;
     char *str;
@@ -190,6 +176,7 @@ static int g_expectfail  = 0;
 static const char *g_dataIndex;
 static const char *g_comment;
 static enum testlib_fail_mode g_mode;
+static const char *g_dataset_override;
 
 #ifdef ENABLE_BENCHMARK
 struct benchmark {
@@ -202,13 +189,13 @@ static struct benchmark g_benchmark =  { 0, 0, 50000, TIMER_STATIC_INITIALIZER }
 #endif /* ENABLE_BENCHMARK */
 
 /** Increase verbosity level to get more output. */
-int testlib_verbose(void)
+int testlib_verbose()
 {
     return ++g_verbose;
 }
 
 /** Decrease verbosity level to get less output. */
-int testlib_silent(void)
+int testlib_silent()
 {
     return --g_verbose;
 }
@@ -334,6 +321,7 @@ static void testdata_clear(struct testdata *data)
 *  \%s       | C String
 *  \%p       | Pointer type
 *  \%i / \%d | int
+*  \%u       | unsigned int
 *  \%f       | double
 *
 * Note: In C \c float values passed via ... to a variadic function are promoted
@@ -378,6 +366,9 @@ void testlib_add_row(const char *name, ...)
         case 'c': /* ‘char’ is promoted to ‘int’ when passed through ‘... */
             tmp[row].columns[col].i = va_arg(ap, int);
             break;
+        case 'u':
+            tmp[row].columns[col].u = va_arg(ap, unsigned int);
+            break;
         case 's':
             tmp[row].columns[col].str = va_arg(ap, char *);
             break;
@@ -411,10 +402,18 @@ static int testlib_find_col(const char *name)
 
 /** \internal Returns the name of the current data set in data-driven tests.
  * Returns an empty string if the current test is no data-driven test.
+ * While g_init or g_cleanup is being called, this function returns an
+ * appropriate string if set in g_dataset_override.
  */
-static const char *testlib_current_dataset(void)
+static const char *testlib_current_dataset()
 {
-    if (g_data.num_rows == 0) return "";
+    if (g_data.num_rows == 0) {
+        if (g_dataset_override != 0) {
+            return g_dataset_override;
+        } else {
+            return "";
+        }
+    }
     return g_data.rows[g_data.current_row].name;
 }
 
@@ -457,6 +456,24 @@ int testlib_fetch_int(const char *name)
     return 0;
 }
 
+/** This function behaves exactly like testlib_fetch() but returns an unsigned int value
+ * previously stored in a \%u column.
+ *
+ * @param name the column name registered with testlib_add_column()
+ * @return the stored value or 0 if not found.
+ */
+unsigned int testlib_fetch_uint(const char *name)
+{
+    int row = g_data.current_row;
+    int col = testlib_find_col(name);
+
+    if (col != -1) {
+        return g_data.rows[row].columns[col].u;
+    }
+
+    return 0;
+}
+
 /** This function behaves exactly like testlib_fetch() but returns a double value
  * previously stored in a \%f column.
  *
@@ -476,7 +493,7 @@ double testlib_fetch_double(const char *name)
 }
 
 /** \internal Returns 1 if the current test is expected to fail, else 0 is returned. */
-static int testlib_is_expect_fail(void)
+static int testlib_is_expect_fail()
 {
     /* if g_expectfail is not set, return zero */
     if (g_expectfail == 0) return 0;
@@ -490,7 +507,7 @@ static int testlib_is_expect_fail(void)
 /** \internal Resets expect_fail flag gloabaly. This is called after a test has
  * completeley finished.
  */
-static void testlib_reset_expect_fail_forced(void)
+static void testlib_reset_expect_fail_forced()
 {
     g_expectfail = 0;
     g_dataIndex = 0;
@@ -503,7 +520,7 @@ static void testlib_reset_expect_fail_forced(void)
  * If dataIndex == "", which means we expect this to fail for all datasets
  * this function does not reset the flag, otherwise it does.
  */
-static void testlib_reset_expect_fail(void)
+static void testlib_reset_expect_fail()
 {
     if (g_dataIndex[0] == 0) return;
     g_expectfail = 0;
@@ -599,7 +616,7 @@ int testlib_verify2(
     const char *file, int line)
 {
     if (condition) {
-        output(LEVEL_RESULT, "%s   : %s(%s)\n", PASS,
+        output(LEVEL_GOODRESULT, "%s   : %s(%s)\n", PASS,
             g_current_test_name, testlib_current_dataset());
         output(LEVEL_LOC, "   Loc: [%s(%i)]\n", file, line);
     } else {
@@ -918,8 +935,12 @@ void testlib_run_tests(const char *testname, const char *testset)
 
     /* initialize test suite */
     if (g_init) {
+        g_current_test_name = g_testname;
+        g_dataset_override = "initialization";
         g_testsuccess = 1;
+        /* no need for a return value in g_init as the test macros set g_testsuccess accordingly */
         g_init();
+        g_dataset_override = 0;
         if (g_testsuccess != 1) {
             output(LEVEL_RESULT, "Test initialization failed, test aborted.\n");
             goto out;
@@ -941,17 +962,37 @@ void testlib_run_tests(const char *testname, const char *testset)
             output(LEVEL_FUNC, ">      : %s entering\n", cur->testdataname);
             cur->fctTestData();
             output(LEVEL_FUNC, "<      : %s returned\n", cur->testdataname);
-            if (cur->fctTestInit) cur->fctTestInit();
-            for (i = 0; i < g_data.num_rows; ++i) {
-                g_data.current_row = i;
-                if (testset && strcmp(g_data.rows[i].name, testset) != 0) {
-                    continue;
+
+            if (cur->fctTestInit) {
+                cur->fctTestInit();
+                if (g_testsuccess != 1) {
+                    output(LEVEL_RESULT, "Initializing test %s failed, skipping test.\n", cur->testname);
                 }
-                output(LEVEL_FUNC, ">      : %s entering\n", cur->testname);
-                cur->fctTest();
-                output(LEVEL_FUNC, "<      : %s returned\n", cur->testname);
             }
-            if (cur->fctTestCleanup) cur->fctTestCleanup();
+
+            if (g_testsuccess == 1) {
+                for (i = 0; i < g_data.num_rows; ++i) {
+                    g_data.current_row = i;
+                    if (testset && strcmp(g_data.rows[i].name, testset) != 0) {
+                        continue;
+                    }
+                    output(LEVEL_FUNC, ">      : %s entering\n", cur->testname);
+                    cur->fctTest();
+                    output(LEVEL_FUNC, "<      : %s returned\n", cur->testname);
+                }
+            }
+
+            if (cur->fctTestCleanup) {
+                int tmp_testsuccess = g_testsuccess;
+                g_testsuccess = 1;
+                cur->fctTestCleanup();
+                if (g_testsuccess != 1) {
+                    output(LEVEL_RESULT, "Cleaning up test %s failed.\n", cur->testname);
+                } else {
+                    g_testsuccess = tmp_testsuccess;
+                }
+            }
+
             testdata_clear(&g_data);
         } else {
             output(LEVEL_FUNC, ">      : %s entering\n", cur->testname);
@@ -967,7 +1008,17 @@ void testlib_run_tests(const char *testname, const char *testset)
         cur = cur->next;
     }
 out:
-    if (g_cleanup) g_cleanup();
+    if (g_cleanup) {
+        g_current_test_name = g_testname;
+        g_dataset_override = "cleanup";
+        g_testsuccess = 1;
+        /* no need for a return value in g_cleanup as the test macros set g_testsuccess accordingly */
+        g_cleanup();
+        g_dataset_override = 0;
+        if (g_testsuccess != 1) {
+            output(LEVEL_RESULT, "Test cleanup failed, test aborted.\n");
+        }
+    }
 
     /* cleanup registered tests */
     cur = g_first_test;
@@ -979,7 +1030,7 @@ out:
 }
 
 /** Lists all registered test functions. */
-void testlib_list_tests(void)
+void testlib_list_tests()
 {
     struct list_element *cur = g_first_test;
 
@@ -990,19 +1041,19 @@ void testlib_list_tests(void)
 }
 
 /** Returns the test result statistic. */
-const struct testlib_stat *testlib_result(void) {
+const struct testlib_stat *testlib_result() {
     return &g_results;
 }
 
 #ifdef ENABLE_BENCHMARK
-void test_benchmark_start(void)
+void test_benchmark_start()
 {
     g_benchmark.n = 1;
     g_benchmark.i = 1;
     timer_start(&g_benchmark.t);
 }
 
-bool test_benchmark_done(void)
+bool test_benchmark_done()
 {
     uint64_t time;
     double f, fTotal;
@@ -1015,8 +1066,8 @@ bool test_benchmark_done(void)
             fTotal /= 1000.0;
             f = fTotal;
             f /= g_benchmark.n;
-            printf("%s : %f msecs per iteration (total: %f, iterations: %i)\n",
-                   RESULT, f, fTotal, g_benchmark.n);
+            printf("%s : %s(%s) %f msecs per iteration (total: %f, iterations: %i)\n",
+                   RESULT, g_current_test_name, testlib_current_dataset(), f, fTotal, g_benchmark.n);
             return false;
         }
         /* restart test with higher iteration counter */
@@ -1028,13 +1079,13 @@ bool test_benchmark_done(void)
     return true;
 }
 
-void test_benchmark_next(void)
+void test_benchmark_next()
 {
     --g_benchmark.i;
 }
 #endif /* ENABLE_BENCHMARK */
 
-void register_tests(void);
+void register_tests();
 
 #ifdef HAVE_GETOPT
 /** \internal print test usage */
@@ -1076,6 +1127,10 @@ int testlib_main(int argc, char *argv[])
     }
 # endif /* __linux__ */
 #endif /* ENABLE_COLOR */
+
+#if defined (_MSC_VER) && !defined (_WIN32_WCE)
+    _CrtSetDbgFlag( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
+#endif
 
     /* intialize testname with a default */
     testname = strrchr(argv[0], '/');

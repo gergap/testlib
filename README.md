@@ -1,10 +1,8 @@
-testlib
-=======
+Unit Test Framework Submodule
+=============================
 
-This submodule is part of the ANSI C based unittest framework.
 (C) 2014 Gerhard Gappmeier <gappy1502@gmx.net>
 
-Usage:
-------
-Include this submodule into your main projcet repository to be able to add unittests.
+See https://github.com/gergap/unittest for more information.
+
 

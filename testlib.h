@@ -1,27 +1,7 @@
-/*
- *  Copyright (C) 2014 Gerhard Gappmeier <gappy1502@gmx.net>
- *
- *  This file is part of testlib.
- *
- *  testlib is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  testlib is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with testlib. If not, see <http://www.gnu.org/licenses/>.
- */
 #ifndef _TESTLIB_H_
 #define _TESTLIB_H_
 
-#ifdef HAVE_CONFIG
-# include <test_config.h>
-#endif
+#include <test_config.h>
 
 #include <stdbool.h>
 #include <stdlib.h> /* for size_t */
@@ -357,9 +337,9 @@ enum testlib_fail_mode {
  * @endcode
  */
 # define UBENCHMARK for (test_benchmark_start(); test_benchmark_done(); test_benchmark_next())
-void test_benchmark_start(void);
-bool test_benchmark_done(void);
-void test_benchmark_next(void);
+void test_benchmark_start();
+bool test_benchmark_done();
+void test_benchmark_next();
 #else
 # define UBENCHMARK while (0)
 #endif
@@ -379,9 +359,10 @@ void testlib_add_column(const char *name, const char *fmt);
 void testlib_add_row(const char *name, ...);
 void *testlib_fetch(const char *name);
 int testlib_fetch_int(const char *name);
+unsigned int testlib_fetch_uint(const char *name);
 double testlib_fetch_double(const char *name);
 
-typedef void (*testfunction)(void);
+typedef void (*testfunction)();
 
 void testlib_register_name(const char *name);
 void testlib_register_init(testfunction func);
@@ -389,9 +370,9 @@ void testlib_register_cleanup(testfunction func);
 void testlib_register_test(testfunction test, const char *stest, testfunction init, testfunction cleanup);
 void testlib_register_datadriven_test(testfunction test, const char *stest, testfunction testdata, const char *stestdata, testfunction init, testfunction cleanup);
 void testlib_run_tests(const char *testname, const char *testset);
-void testlib_list_tests(void);
-int testlib_verbose(void);
-int testlib_silent(void);
+void testlib_list_tests();
+int testlib_verbose();
+int testlib_silent();
 void testlib_info(const char *msg);
 
 struct testlib_stat {
@@ -401,7 +382,7 @@ struct testlib_stat {
     int num_skipped;
 };
 
-const struct testlib_stat *testlib_result(void);
+const struct testlib_stat *testlib_result();
 int testlib_main(int argc, char *argv[]);
 
 #define UINFO(msg) testlib_info(msg)
