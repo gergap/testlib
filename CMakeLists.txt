@@ -11,14 +11,13 @@ if (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 endif()
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-    # if project pthread-win32 exists, pthread-win32_SOURCE_DIR is set accordingly
-    # even if the project is added after the current one
-    if (EXISTS ${pthread-win32_SOURCE_DIR})
-        include_directories(${pthread-win32_SOURCE_DIR})
-        set(SOURCES ${SOURCES} ${pthread-win32_SOURCE_DIR}/getopt.c)
-        set(HEADERS ${HEADERS} ${pthread-win32_SOURCE_DIR}/getopt.h)
-        set(HAVE_GETOPT 1)
-    endif ()
+    # we are adding some C99 stuff, that is still missing on Windows
+    # Come on MS, it's 2014 and VS still only supports C89!!!
+    include_directories(win32)
+    # lets add also getopt() (POSIX)
+    set(SOURCES ${SOURCES} win32/getopt.c)
+    set(HEADERS ${HEADERS} win32/getopt.h)
+    set(HAVE_GETOPT 1)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 else ()
     # check if we have getopt.h
