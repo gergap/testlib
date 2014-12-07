@@ -72,7 +72,7 @@
  * Example:
  * @code
  * int result = sem_init(...);
- * UVERIFY(result != -1, "sem_init failed");
+ * UVERIFY2(result != -1, "sem_init failed");
  * @endcode
  */
 #define UVERIFY2(condition, info) \
