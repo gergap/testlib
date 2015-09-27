@@ -942,6 +942,7 @@ void testlib_run_tests(const char *testname, const char *testset)
         g_init();
         g_dataset_override = 0;
         if (g_testsuccess != 1) {
+            g_results.num_failed++;
             output(LEVEL_RESULT, "Test initialization failed, test aborted.\n");
             goto out;
         }
@@ -1016,6 +1017,7 @@ out:
         g_cleanup();
         g_dataset_override = 0;
         if (g_testsuccess != 1) {
+            g_results.num_failed++;
             output(LEVEL_RESULT, "Test cleanup failed, test aborted.\n");
         }
     }
