@@ -1,6 +1,9 @@
 project(testlib C)
 cmake_minimum_required(VERSION 2.8)
 
+# for generating export macros for visibly API symbols
+include(GenerateExportHeader)
+
 option(ENABLE_COLOR "Enable terminal color support" ON)
 option(ENABLE_HEXDUMP "Enable hexdump support" ON)
 option(ENABLE_BENCHMARK "Enable benchmark support" ON)
@@ -48,5 +51,12 @@ if (ENABLE_BENCHMARK)
 endif ()
 
 add_library(testlib ${SOURCES} ${HEADERS})
-
+generate_export_header(testlib BASE_NAME TESTLIB)
+if (BUILD_SHARED_LIBS AND WIN32)
+    # Dlls must be installed into bin dir on Windows to be found at runtime
+    install(TARGETS testlib DESTINATION bin)
+else()
+    # On UNIX/Linux/Mac or for static libs we put libs into the lib folder as usual
+    install(TARGETS testlib DESTINATION lib)
+endif()
 

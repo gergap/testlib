@@ -2,6 +2,7 @@
 #define _TESTLIB_H_
 
 #include <test_config.h>
+#include <testlib_export.h>
 
 #include <stdbool.h>
 #include <stdlib.h> /* for size_t */
@@ -337,43 +338,43 @@ enum testlib_fail_mode {
  * @endcode
  */
 # define UBENCHMARK for (test_benchmark_start(); test_benchmark_done(); test_benchmark_next())
-void test_benchmark_start();
-bool test_benchmark_done();
-void test_benchmark_next();
+TESTLIB_EXPORT void test_benchmark_start();
+TESTLIB_EXPORT bool test_benchmark_done();
+TESTLIB_EXPORT void test_benchmark_next();
 #else
 # define UBENCHMARK while (0)
 #endif
 
-int testlib_fatal(int condition, const char *scondition, const char *file, int line);
-int testlib_verify(int condition, const char *scondition, const char *file, int line);
-int testlib_verify2(int condition, const char *scondition, const char *info, const char *file, int line);
-int testlib_compare(int actual, int expected, const char *sactual, const char *sexpected, const char *file, int line);
-int testlib_compare64(int64_t actual, int64_t expected, const char *sactual, const char *sexpected, const char *file, int line);
-int testlib_comparef(double actual, double expected, const char *sactual, const char *sexpected, const char *file, int line);
-int testlib_fuzzy_comparef(double actual, double expected, const char *sactual, const char *sexpected, const char *file, int line);
-int testlib_comparestr(const char *actual, const char *expected, const char *sactual, const char *sexpected, const char *file, int line);
-int testlib_comparemem(const unsigned char *actual, size_t actuallen, const unsigned char *expected, size_t expectedlen, const char *file, int line);
-void testlib_expect_fail(const char *dataIndex, const char *comment, enum testlib_fail_mode mode);
+TESTLIB_EXPORT int testlib_fatal(int condition, const char *scondition, const char *file, int line);
+TESTLIB_EXPORT int testlib_verify(int condition, const char *scondition, const char *file, int line);
+TESTLIB_EXPORT int testlib_verify2(int condition, const char *scondition, const char *info, const char *file, int line);
+TESTLIB_EXPORT int testlib_compare(int actual, int expected, const char *sactual, const char *sexpected, const char *file, int line);
+TESTLIB_EXPORT int testlib_compare64(int64_t actual, int64_t expected, const char *sactual, const char *sexpected, const char *file, int line);
+TESTLIB_EXPORT int testlib_comparef(double actual, double expected, const char *sactual, const char *sexpected, const char *file, int line);
+TESTLIB_EXPORT int testlib_fuzzy_comparef(double actual, double expected, const char *sactual, const char *sexpected, const char *file, int line);
+TESTLIB_EXPORT int testlib_comparestr(const char *actual, const char *expected, const char *sactual, const char *sexpected, const char *file, int line);
+TESTLIB_EXPORT int testlib_comparemem(const unsigned char *actual, size_t actuallen, const unsigned char *expected, size_t expectedlen, const char *file, int line);
+TESTLIB_EXPORT void testlib_expect_fail(const char *dataIndex, const char *comment, enum testlib_fail_mode mode);
 
-void testlib_add_column(const char *name, const char *fmt);
-void testlib_add_row(const char *name, ...);
-void *testlib_fetch(const char *name);
-int testlib_fetch_int(const char *name);
-unsigned int testlib_fetch_uint(const char *name);
-double testlib_fetch_double(const char *name);
+TESTLIB_EXPORT void testlib_add_column(const char *name, const char *fmt);
+TESTLIB_EXPORT void testlib_add_row(const char *name, ...);
+TESTLIB_EXPORT void *testlib_fetch(const char *name);
+TESTLIB_EXPORT int testlib_fetch_int(const char *name);
+TESTLIB_EXPORT unsigned int testlib_fetch_uint(const char *name);
+TESTLIB_EXPORT double testlib_fetch_double(const char *name);
 
 typedef void (*testfunction)();
 
-void testlib_register_name(const char *name);
-void testlib_register_init(testfunction func);
-void testlib_register_cleanup(testfunction func);
-void testlib_register_test(testfunction test, const char *stest, testfunction init, testfunction cleanup);
-void testlib_register_datadriven_test(testfunction test, const char *stest, testfunction testdata, const char *stestdata, testfunction init, testfunction cleanup);
-void testlib_run_tests(const char *testname, const char *testset);
-void testlib_list_tests();
-int testlib_verbose();
-int testlib_silent();
-void testlib_info(const char *msg);
+TESTLIB_EXPORT void testlib_register_name(const char *name);
+TESTLIB_EXPORT void testlib_register_init(testfunction func);
+TESTLIB_EXPORT void testlib_register_cleanup(testfunction func);
+TESTLIB_EXPORT void testlib_register_test(testfunction test, const char *stest, testfunction init, testfunction cleanup);
+TESTLIB_EXPORT void testlib_register_datadriven_test(testfunction test, const char *stest, testfunction testdata, const char *stestdata, testfunction init, testfunction cleanup);
+TESTLIB_EXPORT void testlib_run_tests(const char *testname, const char *testset);
+TESTLIB_EXPORT void testlib_list_tests();
+TESTLIB_EXPORT int testlib_verbose();
+TESTLIB_EXPORT int testlib_silent();
+TESTLIB_EXPORT void testlib_info(const char *msg);
 
 struct testlib_stat {
     int num_tests;
@@ -382,8 +383,8 @@ struct testlib_stat {
     int num_skipped;
 };
 
-const struct testlib_stat *testlib_result();
-int testlib_main(int argc, char *argv[]);
+TESTLIB_EXPORT const struct testlib_stat *testlib_result();
+TESTLIB_EXPORT int testlib_main(int argc, char *argv[]);
 
 #define UINFO(msg) testlib_info(msg)
 
