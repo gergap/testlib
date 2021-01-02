@@ -301,6 +301,10 @@ enum testlib_fail_mode {
     Continue   /**< Continues execution of the test after the expected failure. */
 };
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifdef ENABLE_BENCHMARK
 /** Performs a benchmark test.
  *
@@ -387,6 +391,10 @@ TESTLIB_EXPORT const struct testlib_stat *testlib_result();
 TESTLIB_EXPORT int testlib_main(int argc, char *argv[]);
 
 #define UINFO(msg) testlib_info(msg)
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _TESTLIB_H_ */
 
