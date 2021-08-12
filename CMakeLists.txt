@@ -1,5 +1,5 @@
 project(testlib C)
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.0)
 
 # for generating export macros for visibly API symbols
 include(GenerateExportHeader)
